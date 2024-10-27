@@ -1,42 +1,43 @@
-import { newUser } from "../model/user.model.js"; // Ensure this is correct
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import { newUser } from "../model/user.model.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const registerUser = async (req, res) => {
-    const { username, email, password } = req.body; // Corrected order
+    const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
         return res.status(400).json({ message: "All fields are required" });
     }
 
     const findUser = await newUser.findOne({
-        $or: [{ username }, { email }]
+        $or: [{ username }, { email }],
     });
 
     if (findUser) {
         return res.status(400).json({ message: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
-
+    const hashedPassword = await bcrypt.hash(password, 10);
     const createUser = await newUser.create({
         username,
         email,
         password: hashedPassword,
     });
 
-    const token = jwt.sign({ _id: createUser._id, email: createUser.email }, "mySecretNameBye", { expiresIn: "1d" });
+    const token = jwt.sign(
+        { _id: createUser._id, email: createUser.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+    );
 
     const user = await newUser.findById(createUser._id).select("-password");
 
-    if (!user) {
-        return res.status(500).json({ message: "Something went wrong while registering the user" });
-    }
-
-    return res.status(201).json({ createUser, message: "User registered successfully", "token":token, });
+    return res.status(201).json({
+        user,
+        message: "User registered successfully",
+        token,
+    });
 };
-
-
 
 const login = async (req, res) => {
     const { email, password } = req.body;
@@ -55,44 +56,32 @@ const login = async (req, res) => {
         return res.status(401).json({ message: "Invalid password" });
     }
 
-    // Create access token
-    const token = jwt.sign(
-        {
-            userEmail: user.email,
-            userId: user._id
-        },
-        "mysecrectShername",
+    const accessToken = jwt.sign(
+        { userId: user._id, userEmail: user.email },
+        process.env.JWT_SECRET,
         { expiresIn: "1d" }
     );
 
-    // Create refresh token
     const refreshToken = jwt.sign(
-        {
-            userEmail: user.email, 
-            userId: user._id       
-        },
-        "mysecrectShername",
+        { userId: user._id, userEmail: user.email },
+        process.env.JWT_SECRET_REFRESH_TOKEN,
         { expiresIn: "5d" }
     );
 
-    // Optionally, you can save the refresh token in the user's document
-    // user.refreshToken = refreshToken;
-    // await user.save();
-
-    const loggedInUser = await newUser.findById(user._id).select("-password -refreshToken");
-
-    return res.status(201)
-        .cookie("token", token)
-        .cookie("refreshToken", refreshToken)
-        .json({ newUser: loggedInUser, message: "User logged In Successfully" });
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, { httpOnly: true })
+        .cookie("refreshToken", refreshToken, { httpOnly: true })
+        .json({ user: { _id: user._id, email: user.email }, message: "User logged in successfully" });
 };
 
-const logggedOut = async(req,res)=>{
-    
-}
+const loggedOut = async (req, res) => {
+    await newUser.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } }, { new: true });
+    return res.status(201)
+    .clearCookie("accessToken",{httpOnly:true,secure:true})
+    .clearCookie("refreshToken",{httpOnly:true,secure:true} )
+    .json({ message: "User logged out" });
 
-export { 
-    registerUser,
-    login
+};
 
- };
+export { registerUser, login, loggedOut };
