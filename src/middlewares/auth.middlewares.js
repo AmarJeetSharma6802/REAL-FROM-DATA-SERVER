@@ -18,6 +18,7 @@ const verifyJwt = async (req, res, next) => {
         }
 
         req.user = user;
+        console.log("user", req.user)
         next();
     } catch (error) {
         console.error("JWT Verification Error:", error);

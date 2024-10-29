@@ -84,4 +84,44 @@ const loggedOut = async (req, res) => {
 
 };
 
-export { registerUser, login, loggedOut };
+
+const changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        // Log incoming request body for debugging
+        console.log(req.body);
+
+        // Validate input
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: "Both old and new passwords are required." });
+        }
+
+        // Fetch the user from the database
+        const user = await newUser.findById(req.user?._id);
+        if (!user) {
+            return res.status(401).json({ message: "User not found" });
+        }
+
+        // Compare the old password with the stored hashed password
+        const passwordMatch = await bcrypt.compare(oldPassword, user.password);
+        
+        if (!passwordMatch) {
+            return res.status(400).json({ message: "Old password does not match" });
+        }
+
+        // Hash the new password
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save({ validateBeforeSave: false });
+
+        return res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+        console.error("Error changing password:", error);
+        return res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+};
+
+
+
+
+export { registerUser, login, loggedOut,changePassword };
