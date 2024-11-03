@@ -1,20 +1,19 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "src/index.js",
-        "use": "@vercel/node"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/apiBackend/(.*)",
-        "dest": "/apiBackend/$1"
-      }
-    ],
-    "env": {
-      "JWT_SECRET": "@jwt-secret",
-      "JWT_SECRET_REFRESH_TOKEN": "@jwt-refresh-token"
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/index.js",
+      "use": "@vercel/node"
     }
+  ],
+  "routes": [
+    {
+      "src": "/apiBackend/(.*)",
+      "dest": "/apiBackend/$1"
+    }
+  ],
+  "env": {
+    "JWT_SECRET": "@jwt-secret",
+    "JWT_SECRET_REFRESH_TOKEN": "@jwt-refresh-token"
   }
-  
+}
