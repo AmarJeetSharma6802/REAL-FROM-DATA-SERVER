@@ -121,7 +121,46 @@ const changePassword = async (req, res) => {
     }
 };
 
+const getData = async (req, res) => {
+    try {
+        // Ensure you're sending the message along with the user data
+        return res.status(200).json({
+            user: req.user,
+            message: "User fetched successfully"
+        });
+    } catch (error) {
+        console.error("getData Error:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const updateAccountDetails = async(req,res)=>{
+    try {
+        const {username} = req.body
+
+        if(!username){
+            return res.status(400).json({message: "Username is required."})
+        }
+
+        const user = await newUser.findByIdAndUpdate(
+            req.user?.id,
+            {
+                $set :{
+                    username: username
+                }
+            },
+            {new: true}
+        ).select(" -password")
+        res.status(200)
+        .json({message:"Account details updated successfully",user:user})
+    } catch (error) {
+        res.status(500).json({mesaage:"Account details not updated successfully"})
+    }
+}
 
 
 
-export { registerUser, login, loggedOut,changePassword };
+
+
+
+export { registerUser, login, loggedOut,changePassword,getData,updateAccountDetails };
