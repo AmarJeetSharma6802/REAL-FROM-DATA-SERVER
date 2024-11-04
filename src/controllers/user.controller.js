@@ -72,7 +72,7 @@ const login = async (req, res) => {
         .status(200)
         .cookie("accessToken", accessToken, { httpOnly: true })
         .cookie("refreshToken", refreshToken, { httpOnly: true })
-        .json({ user: { _id: user._id, email: user.email }, message: "User logged in successfully" });
+        .json({ user: { _id: user._id, email: user.email }, message: "User logged in successfully",accessToken,refreshToken });
 };
 
 const loggedOut = async (req, res) => {
