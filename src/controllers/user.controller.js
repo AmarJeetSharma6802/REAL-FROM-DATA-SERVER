@@ -151,6 +151,7 @@ const updateAccountDetails = async(req,res)=>{
             },
             {new: true}
         ).select(" -password")
+        
         res.status(200)
         .json({message:"Account details updated successfully",user:user})
     } catch (error) {
