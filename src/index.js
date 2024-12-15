@@ -12,6 +12,6 @@ connectDB()
     console.log(error);
 })
 
-export default index
+
 
 
